@@ -1,0 +1,24 @@
+Name:           monad-gensym
+Version:        0.2
+Cabal-Version:  >= 1.2.3
+Build-Type:     Simple
+License:        BSD3
+License-File:   LICENSE
+Author:         Geoff Hulette
+Maintainer:     ghulette@gmail.com
+Stability:      experimental
+Homepage:       http://github.com/ghulette/
+Bug-reports:    http://github.com/ghulette/
+Synopsis:       Simple monad for generating and inserting symbols
+Description:    Description.
+Category:       Language
+
+Extra-Source-Files: examples/Main.hs
+Data-Files: LICENSE, README
+
+Library
+  Build-Depends:   base >= 4 && < 5,array
+  Hs-Source-Dirs:  src
+  Exposed-Modules: Language.C.Comments
+  Other-Modules:   Language.C.Comments.Lexer
+                   Language.C.Comments.LineParser
