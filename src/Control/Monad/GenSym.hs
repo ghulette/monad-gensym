@@ -6,8 +6,10 @@ module Control.Monad.GenSym
   , EnvKey
   , evalGenSym
   , genSym
+  , write
   , writeCode
   , bindVar
+  , fetchVar
   , doLocal
   , var
   ) where

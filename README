@@ -4,6 +4,9 @@ doing variable/symbol replacement in strings.
 Source repo: http://github.com/ghulette/monad-gensym
 Bug reports: http://github.com/ghulette/monad-gensym/issues
 
-Todo:
-* Add Haddock documentation
-* Add monad transformer instances
+To run the example:
+
+$ cabal configure
+$ cabal build
+$ ghci examples/Simple.hs -package-conf dist/package.conf.inplace
+> main
