@@ -6,16 +6,14 @@ s1 `br` s2 = s1 ++ "\n" ++ s2
 syms :: [String]
 syms = ["_gen" ++ (show i) | i <- [(0 :: Integer)..]]
 
-ex1 :: GenSym String Bool
-ex1 = do
-  let a = "const jbyte* ${y};" `br`
-          "${y} = (*env)->GetStringUTFChars(env, ${x}, NULL);"
-  let b = "(*env)->ReleaseStringUTFChars(env, ${x}, ${y});"
-  x <- genSym
-  y <- genSym
-  bindVarsIn [('x',x),('y',y)] $ do
-    writeLine "foo(${x},${y})"
-  return True
+ex1 :: GenSym [String] String
+ex1 = doLocal $ do
+  x <- var 'x'
+  writeCode "foo(${x},${y},${z})"
+  doLocal $ do
+    writeCode "bar(${x},${y},${z})"
+    z <- var 'z'
+    return z
 
 -- ex2 :: CodeGenProc
 -- ex2 = CodeGenProc $ \x -> do
@@ -29,6 +27,6 @@ ex1 = do
 
 main :: IO ()
 main = do
-  let (_,_,w) = runGenSym syms (ex1 >> ex1)
-  putStrLn w
+  let (_,w) = evalGenSym syms (ex1 >> ex1)
+  mapM_ putStrLn w
   putStrLn "ok"

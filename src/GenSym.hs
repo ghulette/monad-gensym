@@ -3,52 +3,98 @@
 module GenSym where
 
 import Data.Monoid
-import Control.Monad.RWS
+import Control.Monad.State
+import Control.Monad.Writer
 import Data.Map (Map)
 import qualified Data.Map as Map
 
 type Sym = String
+type EnvKey = Char
+type Env = Map EnvKey Sym
 
-newtype GenSym w a = GenSym (RWS (Map Char Sym) w [Sym] a)
+data GenSymState = GenSymState
+  { genSymEnv :: Env
+  , genSymSupply :: [Sym]
+  } deriving (Eq,Show)
+
+mkGenSymState :: [Sym] -> GenSymState
+mkGenSymState ss = GenSymState Map.empty ss
+
+newtype GenSym w a = GenSym (WriterT w (State GenSymState) a)
   deriving (Functor,Monad)
 
-runGenSym :: [Sym] -> GenSym w a -> (a,[Sym],w)
-runGenSym syms (GenSym m) = runRWS m Map.empty syms
+evalGenSym :: [Sym] -> GenSym w a -> (a,w)
+evalGenSym syms m = (x,w)
+  where (x,w,_) = runGenSym syms m
 
+runGenSym :: [Sym] -> GenSym w a -> (a,w,[Sym])
+runGenSym syms (GenSym m) = (x,w,genSymSupply st)
+  where ((x,w),st) = runState (runWriterT m) (mkGenSymState syms)
+
+getEnv :: Monoid w => GenSym w Env
+getEnv = GenSym $ do
+  st <- lift get
+  return (genSymEnv st)
+
+putEnv :: Monoid w => Env -> GenSym w ()
+putEnv env = GenSym $ lift (modify $ \st -> st {genSymEnv = env})
+
+getSupply :: Monoid w => GenSym w [Sym]
+getSupply = GenSym $ do
+  st <- lift get
+  return (genSymSupply st)
+
+putSupply :: Monoid w => [Sym] -> GenSym w ()
+putSupply syms = GenSym $ lift (modify $ \st -> st {genSymSupply = syms})
+  
 genSym :: Monoid w => GenSym w Sym
-genSym = GenSym $ do
-  (x:xs) <- get  -- will fail if supply is empty!
-  put xs
+genSym = do
+  (x:xs) <- getSupply -- will fail if supply is empty!
+  putSupply xs
   return x
 
-writeRaw :: Monoid w => w -> GenSym w ()
-writeRaw = GenSym . tell
+write :: Monoid w => w -> GenSym w ()
+write = GenSym . tell
 
-writeLine :: String -> GenSym String ()
-writeLine s = do
+fetchVar :: Monoid w => EnvKey -> GenSym w (Maybe Sym)
+fetchVar x = do
+  env <- getEnv
+  return (Map.lookup x env)
+
+bindVar :: Monoid w => EnvKey -> Sym -> GenSym w ()
+bindVar k v = do
+  env <- getEnv
+  let env' = Map.insert k v env
+  putEnv env'
+
+doLocal :: Monoid w => GenSym w a -> GenSym w a
+doLocal m = do
+  env <- getEnv
+  x <- m
+  putEnv env
+  return x
+
+writeCode :: String -> GenSym [String] ()
+writeCode s = do
   s' <- replaceVars s
-  writeRaw (s' ++ "\n")
+  write [s']
 
-fetchVar :: Monoid w => Char -> GenSym w (Maybe Sym)
-fetchVar = GenSym . asks . Map.lookup
-
-bindVarsIn :: Monoid w => [(Char,Sym)] -> GenSym w a -> GenSym w a
-bindVarsIn vs (GenSym m) = GenSym $ local (bind vs) m
-  where bind = (flip Map.union) . Map.fromList
+var :: Monoid w => EnvKey -> GenSym w Sym
+var k = do
+  mbSym <- fetchVar k
+  case mbSym of
+    Just v -> return v
+    Nothing -> do
+      v <- genSym
+      bindVar k v
+      return v
 
 replaceVars :: Monoid w => String -> GenSym w String
 replaceVars "" = return ""
-replaceVars ('$' : '{' : x : '}' : xs) = do
-  mbSym <- fetchVar x
-  case mbSym of
-    Just sym -> do
-      xs' <- replaceVars xs
-      return (sym ++ xs')
-    Nothing -> do
-      sym <- genSym
-      bindVarsIn [(x,sym)] $ do
-        xs' <- replaceVars xs
-        return (sym ++ xs')
+replaceVars ('$' : '{' : k : '}' : xs) = do
+  v <- var k
+  xs' <- replaceVars xs
+  return (v ++ xs')
 replaceVars (x:xs) = do
   xs' <- replaceVars xs
   return (x:xs')
