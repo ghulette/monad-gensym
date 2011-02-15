@@ -1,4 +1,4 @@
-import GenSym
+import Control.Monad.GenSym
 
 br :: String -> String -> String
 s1 `br` s2 = s1 ++ "\n" ++ s2

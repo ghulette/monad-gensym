@@ -1,5 +1,5 @@
-Name:           monad-gensym
-Version:        0.2
+Name:           gensym
+Version:        0.1
 Cabal-Version:  >= 1.2.3
 Build-Type:     Simple
 License:        BSD3
@@ -7,18 +7,17 @@ License-File:   LICENSE
 Author:         Geoff Hulette
 Maintainer:     ghulette@gmail.com
 Stability:      experimental
-Homepage:       http://github.com/ghulette/
-Bug-reports:    http://github.com/ghulette/
-Synopsis:       Simple monad for generating and inserting symbols
-Description:    Description.
-Category:       Language
+Homepage:       http://github.com/ghulette/monad-gensym
+Bug-reports:    http://github.com/ghulette/monad-gensym/issues
+Synopsis:       Symbol generation monad
+Description:    Simple monad for generating symbols, binding them to scoped  
+                variables, and doing variable/symbol replacement in strings.
+Category:       Code Generation
 
-Extra-Source-Files: examples/Main.hs
+Extra-Source-Files: examples/Simple.hs
 Data-Files: LICENSE, README
 
 Library
-  Build-Depends:   base >= 4 && < 5,array
+  Build-Depends:   base >= 4 && < 5,containers,mtl
   Hs-Source-Dirs:  src
-  Exposed-Modules: Language.C.Comments
-  Other-Modules:   Language.C.Comments.Lexer
-                   Language.C.Comments.LineParser
+  Exposed-Modules: Control.Monad.GenSym

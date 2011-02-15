@@ -1,0 +1,9 @@
+A simple monad for generating symbols, binding them to scoped variables, and
+doing variable/symbol replacement in strings.
+
+Source repo: http://github.com/ghulette/monad-gensym
+Bug reports: http://github.com/ghulette/monad-gensym/issues
+
+Todo:
+* Add Haddock documentation
+* Add monad transformer instances

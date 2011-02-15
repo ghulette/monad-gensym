@@ -1,6 +1,16 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module GenSym where
+module Control.Monad.GenSym 
+  ( GenSym
+  , Sym
+  , EnvKey
+  , evalGenSym
+  , genSym
+  , writeCode
+  , bindVar
+  , doLocal
+  , var
+  ) where
 
 import Data.Monoid
 import Control.Monad.State
